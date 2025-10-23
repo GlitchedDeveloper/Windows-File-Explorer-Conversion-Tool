@@ -169,6 +169,7 @@
     <ClCompile Include="src\gui\installer.cpp" />
     <ClCompile Include="src\gui\installer\general.cpp" />
     <ClCompile Include="src\gui\installer\images.cpp" />
+    <ClCompile Include="src\gui\installer\videos.cpp" />
     <ClCompile Include="src\gui\window.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
@@ -185,6 +186,7 @@
     <ClInclude Include="src\gui\installer.h" />
     <ClInclude Include="src\gui\installer\general.h" />
     <ClInclude Include="src\gui\installer\images.h" />
+    <ClInclude Include="src\gui\installer\videos.h" />
     <ClInclude Include="src\gui\window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
