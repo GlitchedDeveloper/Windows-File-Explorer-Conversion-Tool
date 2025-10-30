@@ -6,17 +6,22 @@ void GUI::Installer::Images::Render() {
 	static bool jpeg, png, bmp, gif, tiff, svg, webp, pdf;
 
 	if (ImGui::BeginTabItem("Images")) {
-		ImGui::Text("Supported Image Types:");
-		ImGui::Separator();
+		ImVec2 avail = ImGui::GetContentRegionAvail();
+		float buttonHeight = ImGui::GetFrameHeightWithSpacing();
+		float childHeight = avail.y - buttonHeight;
+		if (ImGui::BeginChild("Scrollarea", ImVec2(0, childHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding)) {
 
-		ImGui::Checkbox("JPEG", &jpeg);
-		ImGui::Checkbox("PNG", &png);
-		ImGui::Checkbox("BMP", &bmp);
-		ImGui::Checkbox("GIF", &gif);
-		ImGui::Checkbox("TIFF", &tiff);
-		ImGui::Checkbox("SVG", &svg);
-		ImGui::Checkbox("WEBP", &webp);
-		ImGui::Checkbox("PDF", &pdf);
+			ImGui::Checkbox("jpeg", &jpeg);
+			ImGui::Checkbox("png", &png);
+			ImGui::Checkbox("bmp", &bmp);
+			ImGui::Checkbox("gif", &gif);
+			ImGui::Checkbox("tiff", &tiff);
+			ImGui::Checkbox("svg", &svg);
+			ImGui::Checkbox("webp", &webp);
+			ImGui::Checkbox("pdf", &pdf);
+
+			ImGui::EndChild();
+		}
 
 		ImGui::EndTabItem();
 	}
