@@ -2,31 +2,42 @@
 
 #include "imgui.h"
 
+#include "../../config.h"
+
+std::map<std::string, bool> GUI::Installer::Videos::Filetypes = {
+    {"mp4", false},
+    {"mov", false},
+    {"wmv", false},
+    {"avi", false},
+    {"mkv", false},
+    {"flv", false},
+    {"webm", false},
+    {"mpg", false},
+    {"mpeg", false}
+};
+
 void GUI::Installer::Videos::Render() {
-	static bool mp4, mp3, mov, wmv, avi, mkv, flv, webm, mpg, mpeg, _3gp, _3g2;
-
-
 	if (ImGui::BeginTabItem("Videos")) {
 		ImVec2 avail = ImGui::GetContentRegionAvail();
 		float buttonHeight = ImGui::GetFrameHeightWithSpacing();
 		float childHeight = avail.y - buttonHeight;
 
 		if (ImGui::BeginChild("Scrollarea", ImVec2(0, childHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding)) {
-			ImGui::Checkbox("mp4", &mp4);
-			ImGui::Checkbox("mp3", &mp3);
-			ImGui::Checkbox("mov", &mov);
-			ImGui::Checkbox("wmv", &wmv);
-			ImGui::Checkbox("avi", &avi);
-			ImGui::Checkbox("mkv", &mkv);
-			ImGui::Checkbox("flv", &flv);
-			ImGui::Checkbox("webm", &webm);
-			ImGui::Checkbox("mpg", &mpg);
-			ImGui::Checkbox("mpeg", &mpeg);
-			ImGui::Checkbox("3gp", &_3gp);
-			ImGui::Checkbox("3g2", &_3g2);
+			if (ImGui::Button("Enable All"))
+				for (auto& [extension, enabled] : Filetypes) {
+					enabled = true;
+					Config::Write();
+				}
+			ImGui::SameLine();
+			if (ImGui::Button("Disable All"))
+				for (auto& [extension, enabled] : Filetypes) {
+					enabled = false;
+					Config::Write();
+				}
 
-			if (ImGui::CollapsingHeader("More Options")) {
-
+			for (auto& [extension, enabled] : Filetypes) {
+				if (ImGui::Checkbox(extension.c_str(), &enabled))
+					Config::Write();
 			}
 			ImGui::EndChild();
 		}

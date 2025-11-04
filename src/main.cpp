@@ -7,6 +7,12 @@
 #include "backends/imgui_impl_dx11.h"
 
 #include "gui/window.h"
+#include "config.h"
+#include "gui/installer/videos.h"
+
+#include <string>
+#include <locale>
+#include <codecvt>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -27,8 +33,65 @@ void CreateRenderTarget();
 void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+void HandleCommand(LPWSTR* argv) {
+    if (!argv || !argv[1] || !argv[2]) return;
+
+    std::wstring input = argv[1];
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+
+    for (const auto& [extension, _] : GUI::Installer::Videos::Filetypes) {
+        std::wstring extw = conv.from_bytes(extension);
+        std::wstring dotExt = L"." + extw;
+
+        if (!input.ends_with(dotExt)) continue;
+
+        std::wstring output = input;
+        output.erase(output.size() - extw.size());
+        output += argv[2];
+
+        std::wstring cmd = L"ffmpeg.exe -y -i \"" + input + L"\" \"" + output + L"\"";
+
+        STARTUPINFOW si{};
+        si.cb = sizeof(si);
+        PROCESS_INFORMATION pi{};
+        std::wstring cmdline = cmd;
+
+        BOOL ok = CreateProcessW(
+            NULL,
+            cmdline.empty() ? nullptr : &cmdline[0],
+            NULL, NULL,
+            FALSE,
+            CREATE_NO_WINDOW,
+            NULL, NULL,
+            &si, &pi
+        );
+
+        if (ok) {
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+        }
+
+        LocalFree(argv);
+        return;
+    }
+}
+
 int WINAPI main(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
+    int argc = 0;
+    LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    if (!argv) return 1;
+
+    if (argc > 2) {
+        HandleCommand(argv);
+        LocalFree(argv);
+        return 1;
+    }
+    LocalFree(argv);
+
+    Config::Read();
+
     WNDCLASSEX wc = { sizeof(wc), CS_CLASSDC, WndProc, 0, 0,
                       GetModuleHandle(NULL), NULL, NULL, NULL, NULL,
                       _T("Windows File Explorer Conversion Tool"), NULL };
