@@ -2,9 +2,10 @@
 
 #include "imgui.h"
 
-#include "installer/images.h"
+#include "installer/image.h"
 #include "installer/general.h"
-#include "installer/videos.h"
+#include "installer/video.h"
+#include "installer/audio.h"
 
 #include "../registry.h"
 
@@ -23,8 +24,9 @@ std::wstring GetExecutablePathW()
 void GUI::Installer::Render() {
     if (ImGui::BeginTabBar("InstallerTabBar")) {
         General::Render();
-        Images::Render();
-        Videos::Render();
+        Image::Render();
+        Video::Render();
+        Audio::Render();
         ImGui::EndTabBar();
     }
     
@@ -35,14 +37,29 @@ void GUI::Installer::Render() {
         std::wstring exe_path = GetExecutablePathW();
         exe_path = L"\"" + exe_path + L"\"";
 
-        for (const auto& [extension, enabled] : Videos::Filetypes) {
+        for (const auto& [extension, enabled] : Video::Filetypes) {
             if (enabled) {
-                const std::wstring base = L"SystemFileAssociations\\." + conv.from_bytes(extension) + L"\\shell\\ConvertTo";
+                const std::wstring base = L"SystemFileAssociations\\." + conv.from_bytes(extension) + L"\\shell\\wfect";
 
                 if (!WindowsRegistry::SetRegString(HKEY_CLASSES_ROOT, base, L"MUIVerb", L"Convert to...")) return;
                 if (!WindowsRegistry::SetRegString(HKEY_CLASSES_ROOT, base, L"SubCommands", L"")) return;
 
-                for (const auto& [sub_extension, sub_enabled] : Videos::Filetypes) {
+                for (const auto& [sub_extension, sub_enabled] : Video::Filetypes) {
+                    if (sub_enabled && extension != sub_extension) {
+                        if (!WindowsRegistry::SetRegString(HKEY_CLASSES_ROOT, base + L"\\shell\\" + conv.from_bytes(sub_extension), L"", conv.from_bytes(sub_extension))) return;
+                        if (!WindowsRegistry::SetRegString(HKEY_CLASSES_ROOT, base + L"\\shell\\" + conv.from_bytes(sub_extension) + L"\\command", L"", exe_path + L" \"%1\" \"" + conv.from_bytes(sub_extension) + L"\"")) return;
+                    }
+                }
+            }
+        }
+        for (const auto& [extension, enabled] : Audio::Filetypes) {
+            if (enabled) {
+                const std::wstring base = L"SystemFileAssociations\\." + conv.from_bytes(extension) + L"\\shell\\wfect";
+
+                if (!WindowsRegistry::SetRegString(HKEY_CLASSES_ROOT, base, L"MUIVerb", L"Convert to...")) return;
+                if (!WindowsRegistry::SetRegString(HKEY_CLASSES_ROOT, base, L"SubCommands", L"")) return;
+
+                for (const auto& [sub_extension, sub_enabled] : Audio::Filetypes) {
                     if (sub_enabled && extension != sub_extension) {
                         if (!WindowsRegistry::SetRegString(HKEY_CLASSES_ROOT, base + L"\\shell\\" + conv.from_bytes(sub_extension), L"", conv.from_bytes(sub_extension))) return;
                         if (!WindowsRegistry::SetRegString(HKEY_CLASSES_ROOT, base + L"\\shell\\" + conv.from_bytes(sub_extension) + L"\\command", L"", exe_path + L" \"%1\" \"" + conv.from_bytes(sub_extension) + L"\"")) return;
@@ -62,9 +79,14 @@ void GUI::Installer::Render() {
 
     if (ImGui::Button("Uninstall")) {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-        for (const auto& [extension, enabled] : Videos::Filetypes) {
+        for (const auto& [extension, enabled] : Video::Filetypes) {
             std::wstring extw = conv.from_bytes(extension);
-            std::wstring base = L"SystemFileAssociations\\." + extw + L"\\shell\\ConvertTo";
+            std::wstring base = L"SystemFileAssociations\\." + extw + L"\\shell\\wfect";
+            WindowsRegistry::DeleteRegKey(HKEY_CLASSES_ROOT, base);
+        }
+        for (const auto& [extension, enabled] : Audio::Filetypes) {
+            std::wstring extw = conv.from_bytes(extension);
+            std::wstring base = L"SystemFileAssociations\\." + extw + L"\\shell\\wfect";
             WindowsRegistry::DeleteRegKey(HKEY_CLASSES_ROOT, base);
         }
     }

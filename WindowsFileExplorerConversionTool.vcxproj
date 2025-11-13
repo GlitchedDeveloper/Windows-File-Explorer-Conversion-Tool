@@ -187,8 +187,8 @@
     <ClInclude Include="src\gui\debug.h" />
     <ClInclude Include="src\gui\installer.h" />
     <ClInclude Include="src\gui\installer\general.h" />
-    <ClInclude Include="src\gui\installer\images.h" />
-    <ClInclude Include="src\gui\installer\videos.h" />
+    <ClInclude Include="src\gui\installer\image.h" />
+    <ClInclude Include="src\gui\installer\video.h" />
     <ClInclude Include="src\gui\window.h" />
     <ClInclude Include="src\gui\registry.h" />
     <ClInclude Include="src\gui\config.h" />

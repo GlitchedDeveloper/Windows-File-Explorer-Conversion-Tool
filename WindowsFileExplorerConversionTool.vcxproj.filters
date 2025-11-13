@@ -80,7 +80,7 @@
     <ClInclude Include="src\gui\installer\general.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\installer\images.h">
+    <ClInclude Include="src\gui\installer\image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="external\imgui\imgui_internal.h">
@@ -95,7 +95,7 @@
     <ClInclude Include="external\imgui\imstb_textedit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\installer\videos.h">
+    <ClInclude Include="src\gui\installer\video.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

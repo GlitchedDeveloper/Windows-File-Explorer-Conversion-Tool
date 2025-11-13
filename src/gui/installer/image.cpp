@@ -1,11 +1,11 @@
-#include "images.h"
+#include "image.h"
 
 #include "imgui.h"
 
-void GUI::Installer::Images::Render() {
+void GUI::Installer::Image::Render() {
 	static bool jpeg, png, bmp, gif, tiff, svg, webp, pdf;
 
-	if (ImGui::BeginTabItem("Images")) {
+	if (ImGui::BeginTabItem("Image")) {
 		ImVec2 avail = ImGui::GetContentRegionAvail();
 		float buttonHeight = ImGui::GetFrameHeightWithSpacing();
 		float childHeight = avail.y - buttonHeight;

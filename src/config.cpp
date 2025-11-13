@@ -1,6 +1,7 @@
 #include "config.h"
 
-#include "gui/installer/videos.h"
+#include "gui/installer/video.h"
+#include "gui/installer/audio.h"
 
 #include <fstream>
 #include <cstring>
@@ -12,31 +13,12 @@ bool Config::Write() {
     if (!out) return false;
 
     out.write("WFECT", 5);
-    int enabled_offset = 0;
-
-    out.write(reinterpret_cast<const char*>(&enabled_offset), sizeof(enabled_offset));
-    for (const auto& [extension, enabled] : GUI::Installer::Videos::Filetypes)
-        out.write(extension.c_str(), extension.size() + 1);
-
-    enabled_offset = static_cast<int>(out.tellp());
-
-    uint8_t byte = 0;
-    int bit_index = 0;
-    for (const auto& [ext, enabled] : GUI::Installer::Videos::Filetypes) {
+    for (const auto& [extension, enabled] : GUI::Installer::Video::Filetypes)
+        if (enabled)    
+            out.write(extension.c_str(), extension.size() + 1);
+    for (const auto& [extension, enabled] : GUI::Installer::Audio::Filetypes)
         if (enabled)
-            byte |= (1 << bit_index);
-        bit_index++;
-        if (bit_index == 8) {
-            out.put(static_cast<char>(byte));
-            byte = 0;
-            bit_index = 0;
-        }
-    }
-    if (bit_index > 0)
-        out.put(static_cast<char>(byte));
-
-    out.seekp(5);
-    out.write(reinterpret_cast<const char*>(&enabled_offset), sizeof(enabled_offset));
+            out.write(extension.c_str(), extension.size() + 1);
     return out.good();
 }
 
@@ -46,36 +28,34 @@ bool Config::Read() {
 
     char header[6] = {};
     in.read(header, 5);
-    if (std::strncmp(header, "WFECT", 5) != 0)
+    if (in.gcount() != 5 || std::strncmp(header, "WFECT", 5) != 0)
         return false;
 
-    int enabled_offset = 0;
-    in.read(reinterpret_cast<char*>(&enabled_offset), sizeof(enabled_offset));
+    for (auto &p : GUI::Installer::Video::Filetypes)
+        p.second = false;
+    for (auto &p : GUI::Installer::Audio::Filetypes)
+        p.second = false;
 
-    std::vector<std::pair<std::string, bool>> data;
+    std::string extension;
+    while (std::getline(in, extension, '\0')) {
+        if (extension.empty())
+            continue;
 
-    while (in.tellg() < enabled_offset && in) {
-        std::string extension;
-        std::getline(in, extension, '\0');
-        if (!extension.empty())
-            data.push_back({extension, false});
-    }
-
-    uint8_t byte = 0;
-    int bit_index = 0;
-    for (auto& [extension, enabled] : data) {
-        if (bit_index == 0) {
-            if (!in.read(reinterpret_cast<char*>(&byte), 1))
-                break;
+        auto itV = GUI::Installer::Video::Filetypes.find(extension);
+        if (itV != GUI::Installer::Video::Filetypes.end()) {
+            itV->second = true;
+            continue;
         }
-        enabled = (byte >> bit_index) & 1;
-        bit_index = (bit_index + 1) % 8;
+
+        auto itA = GUI::Installer::Audio::Filetypes.find(extension);
+        if (itA != GUI::Installer::Audio::Filetypes.end()) {
+            itA->second = true;
+            continue;
+        }
     }
-    
-    for (auto& [extension, enabled] : data) {
-        if (GUI::Installer::Videos::Filetypes.find(extension) != GUI::Installer::Videos::Filetypes.end())
-            GUI::Installer::Videos::Filetypes[extension] = enabled;
-    }
+
+    if (in.fail() && !in.eof())
+        return false;
 
     return true;
 }

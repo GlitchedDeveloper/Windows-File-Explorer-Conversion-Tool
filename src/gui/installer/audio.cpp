@@ -1,23 +1,31 @@
-#include "videos.h"
+#include "audio.h"
 
 #include "imgui.h"
 
 #include "../../config.h"
 
-std::map<std::string, bool> GUI::Installer::Videos::Filetypes = {
-    {"mp4", false},
-    {"mov", false},
-    {"wmv", false},
-    {"avi", false},
-    {"mkv", false},
-    {"flv", false},
-    {"webm", false},
-    {"mpg", false},
-    {"mpeg", false}
+std::map<std::string, bool> GUI::Installer::Audio::Filetypes = {
+    {"mp3", false},
+    {"wav", false},
+    {"aac", false},
+    {"flac", false},
+    {"ogg", false},
+    {"wma", false},
+    {"m4a", false},
+    {"alac", false},
+    {"ac3", false},
+    {"opus", false},
+    {"amr", false},
+    {"aiff", false},
+    {"caf", false},
+    {"mp2", false},
+    {"dsd", false},
+    {"pcm", false},
+    {"au", false}
 };
 
-void GUI::Installer::Videos::Render() {
-	if (ImGui::BeginTabItem("Videos")) {
+void GUI::Installer::Audio::Render() {
+	if (ImGui::BeginTabItem("Audio")) {
 		ImVec2 avail = ImGui::GetContentRegionAvail();
 		float buttonHeight = ImGui::GetFrameHeightWithSpacing();
 		float childHeight = avail.y - buttonHeight;

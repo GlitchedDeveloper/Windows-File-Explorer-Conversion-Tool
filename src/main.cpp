@@ -8,7 +8,8 @@
 
 #include "gui/window.h"
 #include "config.h"
-#include "gui/installer/videos.h"
+#include "gui/installer/video.h"
+#include "gui/installer/audio.h"
 
 #include <string>
 #include <locale>
@@ -39,7 +40,44 @@ void HandleCommand(LPWSTR* argv) {
     std::wstring input = argv[1];
     std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
 
-    for (const auto& [extension, _] : GUI::Installer::Videos::Filetypes) {
+    for (const auto& [extension, _] : GUI::Installer::Video::Filetypes) {
+        std::wstring extw = conv.from_bytes(extension);
+        std::wstring dotExt = L"." + extw;
+
+        if (!input.ends_with(dotExt)) continue;
+
+        std::wstring output = input;
+        output.erase(output.size() - extw.size());
+        output += argv[2];
+
+        std::wstring cmd = L"ffmpeg.exe -y -i \"" + input + L"\" \"" + output + L"\"";
+
+        STARTUPINFOW si{};
+        si.cb = sizeof(si);
+        PROCESS_INFORMATION pi{};
+        std::wstring cmdline = cmd;
+
+        BOOL ok = CreateProcessW(
+            NULL,
+            cmdline.empty() ? nullptr : &cmdline[0],
+            NULL, NULL,
+            FALSE,
+            CREATE_NO_WINDOW,
+            NULL, NULL,
+            &si, &pi
+        );
+
+        if (ok) {
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+        }
+
+        LocalFree(argv);
+        return;
+    }
+
+    for (const auto& [extension, _] : GUI::Installer::Audio::Filetypes) {
         std::wstring extw = conv.from_bytes(extension);
         std::wstring dotExt = L"." + extw;
 
