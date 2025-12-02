@@ -168,8 +168,9 @@
     <ClCompile Include="src\gui\debug.cpp" />
     <ClCompile Include="src\gui\installer.cpp" />
     <ClCompile Include="src\gui\installer\general.cpp" />
-    <ClCompile Include="src\gui\installer\images.cpp" />
-    <ClCompile Include="src\gui\installer\videos.cpp" />
+    <ClCompile Include="src\gui\installer\image.cpp" />
+    <ClCompile Include="src\gui\installer\video.cpp" />
+    <ClCompile Include="src\gui\installer\audio.cpp" />
     <ClCompile Include="src\gui\window.cpp" />
     <ClCompile Include="src\registry.cpp" />
     <ClCompile Include="src\config.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="src\gui\installer\general.h" />
     <ClInclude Include="src\gui\installer\image.h" />
     <ClInclude Include="src\gui\installer\video.h" />
+    <ClInclude Include="src\gui\installer\audio.h" />
     <ClInclude Include="src\gui\window.h" />
     <ClInclude Include="src\gui\registry.h" />
     <ClInclude Include="src\gui\config.h" />
