@@ -13,7 +13,8 @@ std::map<std::string, bool> GUI::Installer::Video::Filetypes = {
     {"flv", false},
     {"webm", false},
     {"mpg", false},
-    {"mpeg", false}
+    {"mpeg", false},
+    {"ts", false}
 };
 
 void GUI::Installer::Video::Render() {

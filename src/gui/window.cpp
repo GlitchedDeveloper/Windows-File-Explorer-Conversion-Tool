@@ -5,7 +5,7 @@
 #include "debug.h"
 #include "installer.h"
 
-GUIType GUI::Window::CurrentGUI = GUIType::Debug;
+GUIType GUI::Window::CurrentGUI = GUIType::Installer;
 
 void GUI::Window::Render() {
     ImGuiIO& io = ImGui::GetIO();

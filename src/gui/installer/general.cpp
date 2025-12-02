@@ -2,8 +2,9 @@
 
 #include "imgui.h"
 
+#include "../../config.h"
+
 void GUI::Installer::General::Render() {
-	static char install_location[256];
 	if (ImGui::BeginTabItem("General")) {
 		ImVec2 avail = ImGui::GetContentRegionAvail();
 		float buttonHeight = ImGui::GetFrameHeightWithSpacing();
@@ -12,7 +13,14 @@ void GUI::Installer::General::Render() {
 
 			ImGui::Text("Install Location");
 			ImGui::SameLine();
-			ImGui::InputText("###InstallLocation", install_location, sizeof(install_location));
+			{
+				char buf[260];
+				strncpy(buf, Config::Install_Location.c_str(), sizeof(buf));
+				buf[sizeof(buf) - 1] = '\0';
+				if (ImGui::InputText("###InstallLocation", buf, sizeof(buf))) {
+					Config::Install_Location = buf;
+				}
+			}
 			ImGui::SameLine();
 			ImGui::Button("Choose Folder");
 

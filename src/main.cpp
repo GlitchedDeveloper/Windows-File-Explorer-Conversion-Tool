@@ -2,6 +2,7 @@
 #include <d3d11.h>
 #include <tchar.h>
 #include <dwmapi.h>
+#include <sddl.h>
 #include "imgui.h"
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx11.h"
@@ -10,10 +11,12 @@
 #include "config.h"
 #include "gui/installer/video.h"
 #include "gui/installer/audio.h"
+#include "gui/installer/image.h"
 
 #include <string>
 #include <locale>
 #include <codecvt>
+#include <filesystem>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -40,6 +43,9 @@ void HandleCommand(LPWSTR* argv) {
     std::wstring input = argv[1];
     std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
 
+    std::filesystem::path ffmpeg_path = std::filesystem::path(Config::Install_Location) / "ffmpeg.exe";
+    std::filesystem::path nconvert_path = std::filesystem::path(Config::Install_Location) / "nconvert/nconvert.exe";
+
     for (const auto& [extension, _] : GUI::Installer::Video::Filetypes) {
         std::wstring extw = conv.from_bytes(extension);
         std::wstring dotExt = L"." + extw;
@@ -50,7 +56,7 @@ void HandleCommand(LPWSTR* argv) {
         output.erase(output.size() - extw.size());
         output += argv[2];
 
-        std::wstring cmd = L"ffmpeg.exe -y -i \"" + input + L"\" \"" + output + L"\"";
+        std::wstring cmd = L"\"" + ffmpeg_path.wstring() + L"\" -y -i \"" + input + L"\" \"" + output + L"\"";
 
         STARTUPINFOW si{};
         si.cb = sizeof(si);
@@ -87,7 +93,44 @@ void HandleCommand(LPWSTR* argv) {
         output.erase(output.size() - extw.size());
         output += argv[2];
 
-        std::wstring cmd = L"ffmpeg.exe -y -i \"" + input + L"\" \"" + output + L"\"";
+        std::wstring cmd = L"\"" + ffmpeg_path.wstring() + L"\" -y -i \"" + input + L"\" \"" + output + L"\"";
+
+        STARTUPINFOW si{};
+        si.cb = sizeof(si);
+        PROCESS_INFORMATION pi{};
+        std::wstring cmdline = cmd;
+
+        BOOL ok = CreateProcessW(
+            NULL,
+            cmdline.empty() ? nullptr : &cmdline[0],
+            NULL, NULL,
+            FALSE,
+            CREATE_NO_WINDOW,
+            NULL, NULL,
+            &si, &pi
+        );
+
+        if (ok) {
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+        }
+
+        LocalFree(argv);
+        return;
+    }
+
+    for (const auto& [extension, _] : GUI::Installer::Image::Filetypes) {
+        std::wstring extw = conv.from_bytes(extension);
+        std::wstring dotExt = L"." + extw;
+
+        if (!input.ends_with(dotExt)) continue;
+
+        std::wstring output = input;
+        output.erase(output.size() - extw.size());
+        output += argv[2];
+
+        std::wstring cmd = L"\"" + nconvert_path.wstring() + L"\" -out " + extw + L" -o \"" + output + L"\" \"" + input + L"\"";
 
         STARTUPINFOW si{};
         si.cb = sizeof(si);
@@ -115,7 +158,42 @@ void HandleCommand(LPWSTR* argv) {
     }
 }
 
-int WINAPI main(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
+bool RequireAdmin() {
+    BOOL isAdmin = FALSE;
+    PSID adminGroup = nullptr;
+
+    SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+    if (!AllocateAndInitializeSid(
+            &ntAuthority,
+            2,
+            SECURITY_BUILTIN_DOMAIN_RID,
+            DOMAIN_ALIAS_RID_ADMINS,
+            0, 0, 0, 0, 0, 0,
+            &adminGroup))
+    {
+        return false;
+    }
+
+    CheckTokenMembership(nullptr, adminGroup, &isAdmin);
+    FreeSid(adminGroup);
+
+    if (isAdmin == TRUE)
+        return true;
+
+    char exePath[MAX_PATH];
+    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+
+    SHELLEXECUTEINFOA sei = { sizeof(sei) };
+    sei.lpVerb = "runas";
+    sei.lpFile = exePath;
+    sei.lpParameters = "";
+    sei.nShow = SW_SHOWNORMAL;
+
+    ShellExecuteExA(&sei);
+    return false;
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
     int argc = 0;
     LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -127,6 +205,9 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
         return 1;
     }
     LocalFree(argv);
+
+    if (!RequireAdmin())
+        return 1;
 
     Config::Read();
 
